@@ -142,7 +142,7 @@ const mouseCoordinatesFromEvent = (e) => {
   return { x: e.clientX, y: e.clientY }
 }
 
-const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, onCardLeftScreen, className, preventSwipe = [], swipeRequirementType = 'velocity', swipeThreshold = settings.swipeThreshold, onSwipeRequirementFulfilled, onSwipeRequirementUnfulfilled }, ref) => {
+const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, onCardLeftScreen, className, preventSwipe = [], swipeRequirementType = 'velocity', swipeThreshold = settings.swipeThreshold, onSwipeRequirementFulfilled, onSwipeRequirementUnfulfilled, onClick }, ref) => {
   settings.swipeThreshold = swipeThreshold
   const swipeAlreadyReleased = React.useRef(false)
 
@@ -207,8 +207,11 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
     let lastLocation = { x: 0, y: 0, time: new Date().getTime() }
     let mouseIsClicked = false
     let swipeThresholdFulfilledDirection = 'none'
+    let hasMove = false;
 
     element.current.addEventListener(('touchstart'), (ev) => {
+      hasMove = false;
+
       ev.preventDefault()
       handleSwipeStart()
       offset = { x: -touchCoordinatesFromEvent(ev).x, y: -touchCoordinatesFromEvent(ev).y }
@@ -222,6 +225,8 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
     })
 
     const handleMove = (coordinates) => {
+      hasMove = true;
+
       // Check fulfillment
       if (onSwipeRequirementFulfilled || onSwipeRequirementUnfulfilled) {
         const dir = getSwipeDirection(swipeRequirementType === 'velocity' ? speed : getTranslate(element.current))
@@ -256,6 +261,9 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
     element.current.addEventListener(('touchend'), (ev) => {
       ev.preventDefault()
       handleSwipeReleased(element.current, speed)
+      if (hasMove == false) {
+        element.current.click();
+      }
     })
 
     element.current.addEventListener(('mouseup'), (ev) => {
@@ -273,6 +281,11 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
         handleSwipeReleased(element.current, speed)
       }
     })
+
+    element.current.addEventListener(('click'), (ev) => {
+      if (onClick) onClick(ev)
+    })
+
   }, []) // TODO fix so swipeRequirementType can be changed on the fly. Pass as dependency cleanup eventlisteners and update new eventlisteners.
 
   return (
